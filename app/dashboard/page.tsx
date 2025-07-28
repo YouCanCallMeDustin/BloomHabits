@@ -298,8 +298,8 @@ export default function DashboardPage() {
           title: '✅ Done',
         },
         {
-          action: 'skip',
-          title: '⏭️ Skip',
+          action: 'snooze',
+          title: '⏰ Snooze',
         }
       ]
 
@@ -379,7 +379,7 @@ export default function DashboardPage() {
 
       if (action === 'complete') {
         await toggleHabitCompletion(habitId)
-      } else if (action === 'skip') {
+      } else if (action === 'snooze') {
         if (scheduledTime) {
           const key = `${habitId}-${scheduledTime}`
           notifiedHabitsRef.current.add(key)
@@ -409,7 +409,7 @@ export default function DashboardPage() {
       if (action === 'complete') {
         await toggleHabitCompletion(habitId)
         notification.close()
-      } else if (action === 'skip') {
+      } else if (action === 'snooze') {
         if (notification.data?.scheduledTime) {
           const key = `${habitId}-${notification.data.scheduledTime}`
           notifiedHabitsRef.current.add(key)
@@ -684,7 +684,7 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <BarChart3 className="h-8 w-8 text-primary-600 mr-3" />
+              <img src="/sunflower.png" alt="Bloom Habits Logo" className="h-8 w-8 mr-3" />
               <h1 className="text-2xl font-bold text-gray-900">Bloom Habits</h1>
             </div>
             <div className="flex items-center space-x-4">
