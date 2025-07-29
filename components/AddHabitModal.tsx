@@ -59,6 +59,14 @@ export function AddHabitModal({ isOpen, onClose, onHabitAdded, initialHabit, onS
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [newPresetCategory, setNewPresetCategory] = useState('')
 
+  // Add state for all interval types
+  const [intervalType, setIntervalType] = useState<'none' | 'simple' | 'weekly' | 'monthly' | 'custom'>(initialHabit?.interval_type || 'none');
+  const [intervalValue, setIntervalValue] = useState<number>(initialHabit?.interval_value || 1);
+  const [intervalUnit, setIntervalUnit] = useState<'minutes' | 'hours' | 'days'>(initialHabit?.interval_unit || 'hours');
+  const [weeklyDays, setWeeklyDays] = useState<string[]>(initialHabit?.weekly_days || []);
+  const [monthlyDay, setMonthlyDay] = useState<number | null>(initialHabit?.monthly_day || null);
+  const [customInterval, setCustomInterval] = useState<string>(initialHabit?.custom_interval || '');
+
   // Icon mapping for categories
   const categoryIcons: { [key: string]: any } = {
     briefcase: Briefcase,
@@ -72,6 +80,12 @@ export function AddHabitModal({ isOpen, onClose, onHabitAdded, initialHabit, onS
     default: Clock
   }
 
+  // Add this above handlePresetChange
+  const builtInPresets: Record<string, { start: string; end: string }> = {
+    morning: { start: '08:00', end: '12:00' },
+    evening: { start: '18:00', end: '22:00' },
+  }
+
   // Load categories and presets
   useEffect(() => {
     if (user) {
@@ -80,7 +94,7 @@ export function AddHabitModal({ isOpen, onClose, onHabitAdded, initialHabit, onS
     }
   }, [user])
 
-  // If initialHabit changes (editing a different habit), update state
+  // Update on initialHabit change
   useEffect(() => {
     if (initialHabit) {
       setTitle(initialHabit.title || '');
@@ -89,6 +103,12 @@ export function AddHabitModal({ isOpen, onClose, onHabitAdded, initialHabit, onS
       setNotificationEnabled(initialHabit.notification_enabled ?? true);
       setReminderMinutes(initialHabit.reminder_minutes_before || 15);
       setSchedule(initialHabit.schedule || ['09:00']);
+      setIntervalType(initialHabit.interval_type || 'none');
+      setIntervalValue(initialHabit.interval_value || 1);
+      setIntervalUnit(initialHabit.interval_unit || 'hours');
+      setWeeklyDays(initialHabit.weekly_days || []);
+      setMonthlyDay(initialHabit.monthly_day || null);
+      setCustomInterval(initialHabit.custom_interval || '');
     }
   }, [initialHabit]);
 
@@ -554,6 +574,12 @@ export function AddHabitModal({ isOpen, onClose, onHabitAdded, initialHabit, onS
           schedule,
           notification_enabled: notificationEnabled,
           reminder_minutes_before: reminderMinutes,
+          interval_type: intervalType,
+          interval_value: intervalType === 'simple' ? intervalValue : null,
+          interval_unit: intervalType === 'simple' ? intervalUnit : null,
+          weekly_days: intervalType === 'weekly' ? weeklyDays : null,
+          monthly_day: intervalType === 'monthly' ? monthlyDay : null,
+          custom_interval: intervalType === 'custom' ? customInterval : null,
         });
         setLoading(false);
         return;
@@ -569,6 +595,12 @@ export function AddHabitModal({ isOpen, onClose, onHabitAdded, initialHabit, onS
           schedule,
           notification_enabled: notificationEnabled,
           reminder_minutes_before: reminderMinutes,
+          interval_type: intervalType,
+          interval_value: intervalType === 'simple' ? intervalValue : null,
+          interval_unit: intervalType === 'simple' ? intervalUnit : null,
+          weekly_days: intervalType === 'weekly' ? weeklyDays : null,
+          monthly_day: intervalType === 'monthly' ? monthlyDay : null,
+          custom_interval: intervalType === 'custom' ? customInterval : null,
         })
 
       if (error) {
@@ -644,7 +676,9 @@ export function AddHabitModal({ isOpen, onClose, onHabitAdded, initialHabit, onS
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
         <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">Add New Habit</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">
+            {isEdit ? 'Edit Habit' : 'Add New Habit'}
+          </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-500">
             <X className="h-5 w-5" />
           </button>
@@ -750,6 +784,89 @@ export function AddHabitModal({ isOpen, onClose, onHabitAdded, initialHabit, onS
               </button>
             </div>
           </div>
+
+          {/* Interval Type Selector */}
+          <div className="mb-2">
+            <label className="block text-sm text-gray-600 mb-1">Interval Type</label>
+            <select
+              value={intervalType}
+              onChange={e => setIntervalType(e.target.value as any)}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+            >
+              <option value="none">None</option>
+              <option value="simple">Simple (minutes/hours/days)</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          {/* Simple Interval */}
+          {intervalType === 'simple' && (
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-sm text-gray-600">Interval:</label>
+              <input
+                type="number"
+                min={1}
+                className="w-20 rounded border border-primary-200 px-2 py-1 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                value={intervalValue}
+                onChange={e => setIntervalValue(Number(e.target.value))}
+                placeholder="Every..."
+              />
+              <select
+                className="rounded border border-primary-200 px-2 py-1 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                value={intervalUnit}
+                onChange={e => setIntervalUnit(e.target.value as any)}
+              >
+                <option value="minutes">minutes</option>
+                <option value="hours">hours</option>
+                <option value="days">days</option>
+              </select>
+            </div>
+          )}
+          {/* Weekly Interval */}
+          {intervalType === 'weekly' && (
+            <div className="flex items-center gap-2 flex-wrap mb-2">
+              <label className="text-sm text-gray-600">Days:</label>
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                <label key={day} className="flex items-center gap-1 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={weeklyDays.includes(day)}
+                    onChange={e => setWeeklyDays(e.target.checked ? [...weeklyDays, day] : weeklyDays.filter(d => d !== day))}
+                  />
+                  {day}
+                </label>
+              ))}
+            </div>
+          )}
+          {/* Monthly Interval */}
+          {intervalType === 'monthly' && (
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-sm text-gray-600">Day of month:</label>
+              <input
+                type="number"
+                min={1}
+                max={31}
+                className="w-20 rounded border border-primary-200 px-2 py-1 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                value={monthlyDay ?? ''}
+                onChange={e => setMonthlyDay(Number(e.target.value))}
+                placeholder="1-31"
+              />
+            </div>
+          )}
+          {/* Custom Interval */}
+          {intervalType === 'custom' && (
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-sm text-gray-600">Custom:</label>
+              <input
+                className="rounded border border-primary-200 px-2 py-1 focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+                value={customInterval}
+                onChange={e => setCustomInterval(e.target.value)}
+                placeholder="e.g. every 2 weeks on Thursday"
+                type="text"
+              />
+            </div>
+          )}
 
           {renderNotificationToggle()}
 

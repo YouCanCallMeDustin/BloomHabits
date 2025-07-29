@@ -25,3 +25,10 @@
     @apply bg-white rounded-lg shadow-md p-6;
   }
 } 
+
+.custom-scrollbar::-webkit-scrollbar { width: 8px; background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #bae6fd; border-radius: 4px; }
+.custom-scrollbar { scrollbar-width: thin; scrollbar-color: #bae6fd #f0f9ff; } 
+
+.animate-bounce { animation: bounce 0.7s; }
+@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } } 

@@ -111,8 +111,6 @@ export function HabitChart({ habits, habitLogs }: HabitChartProps) {
     return {
       label: habit.title,
       data,
-      borderColor: habit.color || undefined,
-      backgroundColor: habit.color || undefined,
     };
   });
 
@@ -137,8 +135,8 @@ export function HabitChart({ habits, habitLogs }: HabitChartProps) {
         max: 1,
         ticks: {
           stepSize: 1,
-          callback: function(value: number) {
-            return value === 1 ? 'Completed' : 'Not Done'
+          callback: function(tickValue: string | number) {
+            return tickValue === 1 ? 'Completed' : 'Not Done';
           }
         }
       },

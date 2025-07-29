@@ -10,6 +10,7 @@ import { HabitChart } from '@/components/HabitChart'
 import { supabase } from '@/lib/supabase'
 import type { Database } from '@/lib/supabase'
 import { useNotifications } from '@/hooks/useNotifications'
+import { usePathname } from 'next/navigation'
 
 type Habit = Database['public']['Tables']['habits']['Row']
 type HabitLog = Database['public']['Tables']['habit_logs']['Row']
@@ -53,6 +54,7 @@ function reducer(state: State, action: Action): State {
 export default function DashboardPage() {
   const { user, signOut } = useAuthContext()
   const router = useRouter()
+  const pathname = usePathname()
   const [state, dispatch] = useReducer(reducer, {
     loading: true,
     dataLoaded: false,
@@ -126,7 +128,7 @@ export default function DashboardPage() {
     console.log('Fetching habits for user:', user.id)
     const { data, error } = await supabase
       .from('habits')
-      .select('*')
+      .select('id, user_id, title, description, target_count, schedule, notification_enabled, reminder_minutes_before, is_active, interval_type, interval_value, interval_unit, weekly_days, monthly_day, custom_interval, created_at, updated_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
@@ -462,6 +464,12 @@ export default function DashboardPage() {
     }
   }, [state.habits, permissionGranted, sendNotification])
 
+  useEffect(() => {
+    if (!state.loading && state.dataLoaded && user && state.habits.length === 0 && pathname !== '/onboarding') {
+      router.replace('/onboarding')
+    }
+  }, [state.loading, state.dataLoaded, user, state.habits.length, pathname, router])
+
   const handleSignOut = async () => {
     await signOut()
     router.push('/login')
@@ -583,8 +591,7 @@ export default function DashboardPage() {
       setTimeout(() => {
         sendNotification(`${getEmoji(habit.title)} ${habit.title}`, {
           body: `Snoozed reminder for ${habit.title}`,
-          tag: `snooze-${habit.id}-${Date.now()}`,
-          renotify: true
+          tag: `snooze-${habit.id}-${Date.now()}`
         })
       }, minutes * 60 * 1000)
 
